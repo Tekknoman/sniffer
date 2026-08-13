@@ -24,7 +24,7 @@
         <div class="greeting-row">
           <div>
             <p class="eyebrow">THURSDAY, AUG 13</p>
-            <h1>Good morning, Alex</h1>
+            <h1>Good morning, <span id="user-name">there</span></h1>
             <p class="subtitle">Let's make today feel a little easier.</p>
           </div>
           <div class="sun" aria-hidden="true">✦</div>
@@ -35,19 +35,20 @@
             <div class="med-icon">S</div>
             <div>
               <p class="card-kicker">UP NEXT</p>
-              <h2>Sumatriptan</h2>
-              <p class="muted">Nasal spray · As prescribed</p>
+              <h2 id="home-medication">Sumatriptan</h2>
+              <p class="muted" id="home-medication-detail">Nasal spray · As prescribed</p>
             </div>
             <button class="more" aria-label="Medication options">•••</button>
           </div>
           <div class="dose-panel">
             <div>
               <span class="label">YOUR DOSE</span>
-              <strong>20 <small>mg</small></strong>
+              <strong><span id="home-dose">20</span> <small id="home-unit">mg</small></strong>
             </div>
             <div class="time-pill"><span class="clock">◷</span> 9:00 AM</div>
           </div>
           <button class="primary" id="start-guide">Start guided dose <span>→</span></button>
+          <button class="medication-settings" id="edit-medication">Change medication or dose</button>
           <p class="prescription-note"><span>ⓘ</span> Always follow your prescription and medication instructions.</p>
         </article>
 
@@ -80,7 +81,7 @@
           <div class="countdown" id="countdown"></div>
           <div class="big-vacuum" id="vacuum"><div class="vacuum-body"><span>•ᴗ•</span></div><div class="hose"></div><div class="nozzle"></div><i class="wheel w1"></i><i class="wheel w2"></i></div>
           <div class="dose-track"><div class="track-fill" id="track-fill"></div><div class="track-dots"></div></div>
-          <div class="dose-caption"><b>20 mg</b><span>Sumatriptan nasal spray</span></div>
+          <div class="dose-caption"><b id="guide-dose">20 mg</b><span id="guide-medication">Sumatriptan nasal spray</span><small id="volume-note"></small></div>
         </div>
         <div class="guide-actions">
           <button class="primary" id="ready-button">I'm ready <span>→</span></button>
@@ -99,6 +100,7 @@
       <section class="view" id="profile-view">
         <div class="page-head"><p class="eyebrow">PRIVATE BY DESIGN</p><h1>Your space</h1><p class="subtitle">Your details stay on this device.</p></div>
         <form class="settings-card" id="profile-form">
+          <label>Name<input id="name" type="text" autocomplete="name" required maxlength="40"></label>
           <label>Gender<select id="gender"><option>Prefer not to say</option><option>Woman</option><option>Man</option><option>Non-binary</option></select></label>
           <div class="form-row"><label>Weight <span><input id="weight" type="number" value="68"> kg</span></label><label>Height <span><input id="height" type="number" value="172"> cm</span></label></div>
           <button class="primary" type="submit">Save on this device</button>
@@ -112,6 +114,30 @@
         <button data-nav="profile"><span>○</span>Profile</button>
       </nav>
     </main>
+
+    <div class="setup-overlay" id="setup-overlay" aria-hidden="true">
+      <form class="setup-card" id="setup-form">
+        <div class="setup-art">✦</div><p class="eyebrow">WELCOME TO SNIFFLE</p><h1>Let’s get to know you</h1>
+        <p class="subtitle">Your details stay privately on this device.</p>
+        <label>Your name<input id="setup-name" type="text" autocomplete="name" required maxlength="40" placeholder="What should we call you?"></label>
+        <label>Gender<select id="setup-gender"><option>Prefer not to say</option><option>Woman</option><option>Man</option><option>Non-binary</option></select></label>
+        <div class="form-row"><label>Weight <span><input id="setup-weight" type="number" min="1" max="500" required placeholder="68"> kg</span></label><label>Height <span><input id="setup-height" type="number" min="30" max="300" required placeholder="172"> cm</span></label></div>
+        <button class="primary" type="submit">Continue <span>→</span></button>
+      </form>
+    </div>
+
+    <div class="setup-overlay" id="medication-overlay" aria-hidden="true">
+      <form class="setup-card" id="medication-form">
+        <button class="modal-close" type="button" id="close-medication" aria-label="Close">×</button>
+        <p class="eyebrow">YOUR PRESCRIPTION</p><h1>Medication & dose</h1>
+        <p class="subtitle">Enter only the amount on your prescription or approved instructions.</p>
+        <label>Medication<select id="medication-select"></select></label>
+        <div class="medicine-info" id="medicine-info"></div>
+        <div class="form-row"><label>Prescribed dose<input id="dose-input" type="number" min="0.01" step="0.01" required></label><label>Unit<input id="dose-unit" type="text" readonly></label></div>
+        <button class="primary" type="submit">Use this medication</button>
+        <p class="calculation-disclaimer">The visual line is an approximate volume representation, not a dosing recommendation or measuring tool.</p>
+      </form>
+    </div>
 
     <div class="completion" id="completion" aria-hidden="true">
       <div class="confetti">✦　·　✧　•　✦</div><div class="done-check">✓</div><h2>Beautifully done!</h2><p>You showed up for yourself today.</p>
