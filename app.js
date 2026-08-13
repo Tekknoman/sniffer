@@ -14,6 +14,14 @@ const medicine = () => MEDICINES.find(item => item.id === data.medication.id) ||
 const formatNumber = value => Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 });
 const showOverlay = (selector, show) => { const el = $(selector); el.classList.toggle('show', show); el.setAttribute('aria-hidden', String(!show)); };
 const toast = message => { const el = $('#toast'); el.textContent = message; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); };
+const sounds = {
+  countdown: new Audio('3-2-1-countdown.mp3'),
+  vacuum: new Audio('vacuum-cleaner.mp3'),
+  done: new Audio('Done.mp3')
+};
+Object.values(sounds).forEach(sound => { sound.preload = 'auto'; });
+const playSound = sound => { sound.currentTime = 0; sound.play().catch(() => {}); };
+const stopSound = sound => { sound.pause(); sound.currentTime = 0; };
 
 function approximateVolumeMl(item, dose) {
   if (item.unit === 'mL') return dose;
@@ -28,12 +36,9 @@ function approximateVolumeMl(item, dose) {
 function lineGeometry() {
   const item = medicine();
   const volumeMl = approximateVolumeMl(item, Number(data.medication.dose));
-  if (!volumeMl) return { width: 280, height: 14, volumeMl: null };
-  // 1 mL = 1,000 mm³. Model a 4 mm-high, semicircular bead: area = πr²/2.
-  const crossSectionMm2 = Math.PI * 2 * 2 / 2;
-  const physicalLengthMm = volumeMl * 1000 / crossSectionMm2;
-  // Scale physical millimetres for legibility while retaining relative medicine volumes.
-  return { width: Math.max(150, Math.min(330, physicalLengthMm * 4)), height: 14, volumeMl };
+  if (!volumeMl) return { width: 180, height: 14, volumeMl: null };
+  // Keep the guide legible while making its length proportional to the prescribed volume.
+  return { width: Math.max(80, Math.min(330, volumeMl * 1600)), height: 14, volumeMl };
 }
 
 function renderMedication() {
@@ -114,11 +119,15 @@ $('#profile-form').addEventListener('submit', event => { event.preventDefault();
 $('#ready-button').addEventListener('click', async () => {
   $('#ready-button').disabled = true; const cue = $('#cues').checked;
   $('#guide-title').textContent = 'Here we go'; $('#guide-subtitle').textContent = 'Follow along with your guide.';
+  if (cue) playSound(sounds.countdown);
   for (const step of ['3', '2', '1', 'GO!']) { $('#countdown').textContent = step; if (cue && navigator.vibrate) navigator.vibrate(step === 'GO!' ? [70, 40, 100] : 45); await new Promise(resolve => setTimeout(resolve, step === 'GO!' ? 650 : 720)); }
+  stopSound(sounds.countdown);
   $('#countdown').textContent = ''; $('#vacuum').classList.add('go'); $('#track-fill').classList.add('consume');
-  await new Promise(resolve => setTimeout(resolve, data.preferences.guideSeconds * 1000 + 200)); showOverlay('#completion', true);
+  if (cue) playSound(sounds.vacuum);
+  await new Promise(resolve => setTimeout(resolve, data.preferences.guideSeconds * 1000 + 200));
+  stopSound(sounds.vacuum); showOverlay('#completion', true); if (cue) playSound(sounds.done);
 });
-function resetGuide() { showOverlay('#completion', false); $('#vacuum').classList.remove('go'); $('#track-fill').classList.remove('consume'); $('#ready-button').disabled = false; $('#guide-title').textContent = 'Ready when you are'; $('#guide-subtitle').textContent = 'Take a breath. There’s no rush.'; navigate('home'); }
+function resetGuide() { Object.values(sounds).forEach(stopSound); showOverlay('#completion', false); $('#vacuum').classList.remove('go'); $('#track-fill').classList.remove('consume'); $('#ready-button').disabled = false; $('#guide-title').textContent = 'Ready when you are'; $('#guide-subtitle').textContent = 'Take a breath. There’s no rush.'; navigate('home'); }
 $('#log-dose').addEventListener('click', () => { const item = medicine(); data.history.push({ medication: item.name, amount: `${formatNumber(data.medication.dose)} ${item.unit}`, date: new Date().toISOString() }); save(); resetGuide(); toast('Dose logged privately ✓'); });
 $('#not-taken').addEventListener('click', resetGuide);
 $('#clear-history').addEventListener('click', () => { data.history = []; save(); renderHistory(); toast('Local history cleared'); });
