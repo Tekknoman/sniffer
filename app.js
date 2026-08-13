@@ -5,7 +5,7 @@ const MEDICINES = [
   { id: 'desmopressin-10', name: 'Desmopressin', form: 'Nasal spray', unit: 'mcg', defaultDose: 10, concentration: 100, density: 1 },
   { id: 'saline', name: 'Saline', form: 'Nasal spray', unit: 'mL', defaultDose: 0.1, concentration: null, density: 1 }
 ];
-const defaults = { profile: null, medication: { id: 'sumatriptan-20', dose: 20 }, history: [] };
+const defaults = { profile: null, medication: { id: 'sumatriptan-20', dose: 20 }, preferences: { guideSeconds: 4 }, history: [] };
 let data;
 try { data = { ...defaults, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') }; } catch { data = { ...defaults }; }
 const $ = selector => document.querySelector(selector);
@@ -28,12 +28,12 @@ function approximateVolumeMl(item, dose) {
 function lineGeometry() {
   const item = medicine();
   const volumeMl = approximateVolumeMl(item, Number(data.medication.dose));
-  if (!volumeMl) return { width: 250, height: 12, volumeMl: null };
+  if (!volumeMl) return { width: 280, height: 14, volumeMl: null };
   // 1 mL = 1,000 mm³. Model a 4 mm-high, semicircular bead: area = πr²/2.
   const crossSectionMm2 = Math.PI * 2 * 2 / 2;
   const physicalLengthMm = volumeMl * 1000 / crossSectionMm2;
   // Scale physical millimetres for legibility while retaining relative medicine volumes.
-  return { width: Math.max(90, Math.min(300, physicalLengthMm * 3)), height: 14, volumeMl };
+  return { width: Math.max(150, Math.min(330, physicalLengthMm * 4)), height: 14, volumeMl };
 }
 
 function renderMedication() {
@@ -95,6 +95,15 @@ $('#close-medication').addEventListener('click', () => showOverlay('#medication-
 $('#medication-select').addEventListener('change', () => updateMedicationFields(true));
 $('#medication-form').addEventListener('submit', event => { event.preventDefault(); data.medication = { id: $('#medication-select').value, dose: Number($('#dose-input').value) }; save(); renderMedication(); showOverlay('#medication-overlay', false); toast('Medication updated ✓'); });
 
+function setGuideSpeed(seconds) {
+  data.preferences = { ...data.preferences, guideSeconds: Number(seconds) };
+  document.documentElement.style.setProperty('--guide-duration', `${data.preferences.guideSeconds}s`);
+  $('#guide-speed').value = data.preferences.guideSeconds;
+  $('#speed-label').textContent = `${data.preferences.guideSeconds} seconds`;
+  save();
+}
+$('#guide-speed').addEventListener('input', event => setGuideSpeed(event.target.value));
+
 $('#setup-form').addEventListener('submit', event => {
   event.preventDefault();
   data.profile = { name: $('#setup-name').value.trim(), gender: $('#setup-gender').value, weight: Number($('#setup-weight').value), height: Number($('#setup-height').value) };
@@ -107,7 +116,7 @@ $('#ready-button').addEventListener('click', async () => {
   $('#guide-title').textContent = 'Here we go'; $('#guide-subtitle').textContent = 'Follow along with your guide.';
   for (const step of ['3', '2', '1', 'GO!']) { $('#countdown').textContent = step; if (cue && navigator.vibrate) navigator.vibrate(step === 'GO!' ? [70, 40, 100] : 45); await new Promise(resolve => setTimeout(resolve, step === 'GO!' ? 650 : 720)); }
   $('#countdown').textContent = ''; $('#vacuum').classList.add('go'); $('#track-fill').classList.add('consume');
-  await new Promise(resolve => setTimeout(resolve, 3400)); showOverlay('#completion', true);
+  await new Promise(resolve => setTimeout(resolve, data.preferences.guideSeconds * 1000 + 200)); showOverlay('#completion', true);
 });
 function resetGuide() { showOverlay('#completion', false); $('#vacuum').classList.remove('go'); $('#track-fill').classList.remove('consume'); $('#ready-button').disabled = false; $('#guide-title').textContent = 'Ready when you are'; $('#guide-subtitle').textContent = 'Take a breath. There’s no rush.'; navigate('home'); }
 $('#log-dose').addEventListener('click', () => { const item = medicine(); data.history.push({ medication: item.name, amount: `${formatNumber(data.medication.dose)} ${item.unit}`, date: new Date().toISOString() }); save(); resetGuide(); toast('Dose logged privately ✓'); });
@@ -115,5 +124,5 @@ $('#not-taken').addEventListener('click', resetGuide);
 $('#clear-history').addEventListener('click', () => { data.history = []; save(); renderHistory(); toast('Local history cleared'); });
 
 $('#week-row').innerHTML = ['M','T','W','T','F','S','S'].map((day, i) => `<div class="day ${i < 3 ? 'done' : i === 3 ? 'today' : ''}">${day}<span>${i < 3 ? '✓' : 10 + i}</span></div>`).join('');
-renderMedication(); renderProfile(); renderHistory(); save();
+renderMedication(); renderProfile(); renderHistory(); setGuideSpeed(data.preferences?.guideSeconds || 4); save();
 if (!data.profile?.name) showOverlay('#setup-overlay', true);

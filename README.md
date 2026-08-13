@@ -14,6 +14,6 @@ All user data is stored in browser `localStorage`; no account, backend, or netwo
 
 ## GitHub Pages
 
-Pushes to the `work` branch automatically deploy the static site to GitHub Pages. The workflow can also be started manually from the repository's **Actions** tab.
+Pushes to the `prod` branch automatically deploy the static site to GitHub Pages. The workflow can also be started manually from the repository's **Actions** tab.
 
 Before the first deployment, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
