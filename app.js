@@ -36,12 +36,9 @@ function approximateVolumeMl(item, dose) {
 function lineGeometry() {
   const item = medicine();
   const volumeMl = approximateVolumeMl(item, Number(data.medication.dose));
-  if (!volumeMl) return { width: 280, height: 14, volumeMl: null };
-  // 1 mL = 1,000 mm³. Model a 4 mm-high, semicircular bead: area = πr²/2.
-  const crossSectionMm2 = Math.PI * 2 * 2 / 2;
-  const physicalLengthMm = volumeMl * 1000 / crossSectionMm2;
-  // Scale physical millimetres for legibility while retaining relative medicine volumes.
-  return { width: Math.max(150, Math.min(330, physicalLengthMm * 4)), height: 14, volumeMl };
+  if (!volumeMl) return { width: 180, height: 14, volumeMl: null };
+  // Keep the guide legible while making its length proportional to the prescribed volume.
+  return { width: Math.max(80, Math.min(330, volumeMl * 1600)), height: 14, volumeMl };
 }
 
 function renderMedication() {
